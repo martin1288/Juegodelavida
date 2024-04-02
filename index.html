@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulación de Células</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.10/pixi.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #87CEEB; 
+    }
+    canvas {
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="cellSimulationCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('cellSimulationCanvas');
+    canvas.width = 500;
+    canvas.height = 500; 
+
+    // Creación de la aplicación PIXI
+    const app = new PIXI.Application({
+      view: canvas,
+      transparent: true,
+    });
+
+    // Número de filas y columnas
+    const nRows = 50;
+    const nCols = 50;
+    const cellSize = 10; 
+    const cellSpacing = 2; 
+    let cellBoard = []; // Tablero de células
+
+    // Función para generar la cuadrícula 
+    function generateGrid() {
+      const graphics = new PIXI.Graphics();
+      for (let row = 0; row < nRows; row++) {
+        for (let col = 0; col < nCols; col++) {
+          const color = 0x111111; 
+          graphics.lineStyle(1, color, 1);
+          graphics.drawRect(col * (cellSize + cellSpacing), row * (cellSize + cellSpacing), cellSize, cellSize);
+        }
+      }
+      app.stage.addChild(graphics);
+    }
+
+    // Función para dibujar las células en el lienzo
+    function drawCells() {
+      const graphics = new PIXI.Graphics();
+      for (let row = 0; row < nRows; row++) {
+        for (let col = 0; col < nCols; col++) {
+          const color = cellBoard[row][col] === 1 ? 0xff0033 : 0x00ffcc; // Cambiado el esquema de colores
+          graphics.beginFill(color);
+          graphics.drawRect(col * (cellSize + cellSpacing), row * (cellSize + cellSpacing), cellSize, cellSize);
+          graphics.endFill();
+        }
+      }
+      app.stage.addChild(graphics);
+    }
+
+    // Función para calcular el siguiente estado del tablero de células
+    function computeNextGen() {
+      const newCellBoard = [];
+      for (let row = 0; row < nRows; row++) {
+        newCellBoard[row] = [];
+        for (let col = 0; col < nCols; col++) {
+          const neighbors = countCellNeighbors(row, col);
+          if (cellBoard[row][col] === 1) {
+            newCellBoard[row][col] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
+          } else {
+            newCellBoard[row][col] = (neighbors === 3) ? 1 : 0;
+          }
+        }
+      }
+      cellBoard = newCellBoard;
+    }
+
+    // Función para contar vecinos vivos de una célula
+    function countCellNeighbors(row, col) {
+      let count = 0;
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          const nRow = row + i;
+          const nCol = col + j;
+          if (nRow >= 0 && nRow < nRows && nCol >= 0 && nCol < nCols && !(i === 0 && j === 0)) {
+            count += cellBoard[nRow][nCol];
+          }
+        }
+      }
+      return count;
+    }
+
+    // Función para inicializar el tablero de células con estados aleatorios
+    function initializeCells() {
+      for (let row = 0; row < nRows; row++) {
+        cellBoard[row] = [];
+        for (let col = 0; col < nCols; col++) {
+          cellBoard[row][col] = Math.random() > 0.5 ? 1 : 0; // Estado inicial aleatorio
+        }
+      }
+    }
+
+    initializeCells(); // Inicializar las células
+    generateGrid(); // Generar la cuadrícula inicial
+
+    // Ciclo principal del juego para calcular y dibujar el siguiente estado de las células
+    setInterval(() => {
+      computeNextGen();
+      app.stage.removeChildren(); 
+      drawCells(); 
+    }, 100); 
+  </script>
+</body>
+</html>
